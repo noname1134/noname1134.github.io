@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>השחרה</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="hashkhara-title">
+      <div class="hero-inner">
+        <h1 id="hashkhara-title">השחרה</h1>
+        <p class="lead">אנא מלאו את הפרטים לפני שליחת הבקשה</p>
+
+        <div class="form-group">
+          <label for="mb">מספר בקשה</label>
+          <input class="input" id="mb" type="number"/>
+        </div>
+
+        <div class="form-group">
+          <label for="ap">גורם מאשר דרגה 2</label>
+          <select class="input" id="ap">
+            <option>עידו מויאל</option>
+            <option>נועה בן חמו</option>
+          </select>
+        </div>
+
+        <button class="cta" id="send" style="margin-bottom:10px;">שלח</button>
+        <br>
+        <a href="index.html" class="nav-link">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    document.getElementById('send').onclick = async () => {
+      alert('בקשתך תיבחן ותאושר בתוך יום עסקים');
+      const res = await fetch('http://localhost:3000/auto-book?from=' + new Date().toISOString() + '&service=' + encodeURIComponent('השחרה'));
+      const j = await res.json();
+      if (j.success) {
+        await fetch('http://localhost:3000/book', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            service_name: '_

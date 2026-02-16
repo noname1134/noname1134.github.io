@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>הזמנת פגישה</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="booking-title">
+      <div class="hero-inner">
+        <h1 id="booking-title">הזמנת פגישה</h1>
+        <p class="lead">אנא בחרו מועד ומספר טלפון לאישור ההזמנה</p>
+
+        <div id="bookingDetailsSummary" class="form-group" style="font-size:0.95rem;color:var(--muted);">
+          טוען פרטי פגישה...
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentDateTime">בחר תאריך ושעת התחלה</label>
+          <div class="form-group">
+            <label for="appointmentDate">בחר תאריך</label>
+            <input type="date" id="appointmentDate" name="appointmentDate" class="input" required>
+          </div>
+
+          <div class="form-group">
+            <label>בחר שעה פנויה</label>
+            <div id="timeSlotsContainer">
+              <div id="morningSlots"><h3>🕗 שעות בוקר (08:30 - 11:30)</h3><div class="slot-group"></div></div>
+              <div id="afternoonSlots"><h3>🕓 שעות אחר הצהריים (16:30 - 18:30)</h3><div class="slot-group"></div></div>
+              <div id="eveningSlots"><h3>🌙 שעות ערב (20:30 - 22:00)</h3><div class="slot-group"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phoneInput">מספר טלפון</label>
+          <input type="tel" id="phoneInput" class="input" placeholder="הכנס מספר טלפון" required>
+        </div>
+
+        <button disabled id="confirmBooking" class="cta" style="margin-bottom:10px;opacity:0.6;">אשר הזמנה</button>
+        <br>
+        <a href="index.html" class="nav-link">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const dateInput = document.getElementById('appointmentDate');
+    const phoneInput = document.getElementById('phoneInput');
+    const confirmBtn = document.getElementById('confirmBooking');
+    const detailsSummary = document.getElementById('bookingDetailsSummary');
+
+    const morningContainer = document.querySelector('#morningSlots .slot-group');
+    const afternoonContainer = document.querySelector('#afternoonSlots .slot-group');
+    const eveningContainer = document.querySelector('#eveningSlots .slot-group');
+    const allGroups = [morningContainer, afternoonContainer, eveningContainer];
+
+    let selectedTime = null;
+
+    let details = {};
+    try { details = JSON.parse(localStorage.getItem('bookingDetails') || '{}'); } catch (e) {}
+    detailsSummary.innerHTML = '<strong>פרטי השירות שנשלחו:</strong><br/>' +
+      Object.keys(details).map(k => '<b>' + k + ':</b> ' + details[k]).join('<br/>');
+
+    dateInput.addEventListener('change', async () => {
+      const date = dateInput.value;
+      if (!date) return;
+
+      // Clear all slot containers
+      allGroups.forEach(g => g.innerHTML = 'טוען...');
+
+      selectedTime = null;
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.6';
+
+      const serviceType = details.serviceType || details.service || 'שירות לא ידוע';
+      const response = await getAvailability(date, serviceType, details);
+
+      allGroups.forEach(g => g.innerHTML = ''); // Clear after loading
+
+      if (response.success && response.available.length) {
+        response.available.forEach(iso => {
+          const dt = new Date(iso);
+          if (dt.getMinutes() % 10 !== 0) return;
+          const hour = dt.getHours();
+          const minute = dt.getMinutes();
+          const timeStr = dt.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+          const btn = document.createElement('button');
+          btn.textContent = timeStr;
+          btn.className = 'cta';
+          btn.style.padding = '6px 12px';
+          btn.style.fontSize = '0.9rem';
+          btn.style.background = '#eee';
+          btn.style.color = '#333';
+          btn.style.border = '1px solid #ccc';
+          btn.style.borderRadius = '6px';
+          btn.style.boxShadow = 'none';
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('#timeSlotsContainer button').forEach(b => {
+              b.style.background = '#eee';
+              b.style.color = '#333';
+            });
+            btn.style.background = '#0077b6';
+            btn.style.color = '#fff';
+            selectedTime = iso;
+            toggleButton();
+          });
+
+          // Determine which container to append to
+          const totalMinutes = hour * 60 + minute;
+          if (totalMinutes >= 510 && totalMinutes < 690) { // 08:30 - 11:30
+            morningContainer.appendChild(btn);
+          } else if (totalMinutes >= 990 && totalMinutes < 1110) { // 16:30 - 18:30
+            afternoonContainer.appendChild(btn);
+          } else if (totalMinutes >= 1230 && totalMinutes < 1320) { // 20:30 - 22:00
+            eveningContainer.appendChild(btn);
+          }
+        });
+      } else {
+        allGroups.forEach(g => g.textContent = 'אין זמינות לתאריך זה');
+      }
+    });
+
+    function toggleButton() {
+      const isReady = !!selectedTime && !!phoneInput.value;
+      confirmBtn.disabled = !isReady;
+      confirmBtn.style.opacity = isReady ? '1' : '0.6';
+    }
+
+    phoneInput.addEventListener('input', toggleButton);
+
+    confirmBtn.addEventListener('click', async function(){
+      if (!selectedTime || !phoneInput.value) {
+        alert('נא לבחור שעה ומספר טלפון');
+        return;
+      }
+
+      const payload = {
+        serviceType: details.serviceType || details.service || 'שירות לא ידוע',
+        details: details,
+        startTime: selectedTime,
+        phone: phoneInput.value
+      };
+
+      try {
+        const res = await fetch('http://localhost:3000/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ הפגישה נשמרה בהצלחה');
+          localStorage.removeItem('bookingDetails');
+          const service = encodeURIComponent(payload.serviceType);
+          const time = encodeURIComponent(payload.startTime);
+          window.location.href = `success.html?service=${service}&time=${time}`;
+        } else {
+          alert('❌ שגיאה: ' + (data.message || 'שגיאה לא ידועה'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('שגיאת רשת — לא ניתן לשמור את הפגישה');
+      }
+    });
+  });
+
+  async function getAvailability(dateStr, serviceType, details) {
+    try {
+      const res = await fetch(`http://localhost:3000/availability?date=${encodeURIComponent(dateStr)}&serviceType=${encodeURIComponent(serviceType)}&details=${encodeURIComponent(JSON.stringify(details))}`);
+      return await res.json();
+    } catch (err) {
+      console.error('שגיאה בשליפת זמינות:', err);
+      return { success: false, available: [] };
+    }
+  }
+  </script>
+
+</body>
+</html>

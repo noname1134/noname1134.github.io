@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>הזמנה אושרה</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="success-title">
+      <div class="hero-inner">
+        <div style="font-size:44px;color:#0b7a2f;margin-bottom:12px;">✔️</div>
+        <h1 id="success-title">ההזמנה נקלטה בהצלחה</h1>
+        <p class="lead">תודה — אנו נאשר את הפרטים וניצור איתך קשר במידת הצורך.</p>
+        
+        <div id="successDetails" style="margin-top:16px;font-size:1rem;color:var(--text);text-align:right;">
+          <!-- Filled by JS -->
+        </div>
+        
+        <div style="margin-top:18px;">
+          <a class="cta" href="index.html">חזרה לדף הבית</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    // Hebrew name mapping (same as in admin.html)
+    const SERVICE_NAMES = {
+      kidud: "קידוד",
+      chul: "טופס חו\"ל",
+      ishur: "אישור ניהול זהויות",
+	  "tiyulim-in": "טיולים - נכנס",
+      "tiyulim-out": "טיולים - יוצא",
+    };
+
+    const params = new URLSearchParams(location.search);
+    const svcKey = params.get('service') || 'שירות לא ידוע';
+    const svcName = SERVICE_NAMES[svcKey] || svcKey;
+    const t = params.get('time') ? new Date(params.get('time')).toLocaleString('he-IL') : '—';
+    
+    document.getElementById('successDetails').innerHTML = `
+      <strong>שירות:</strong> ${svcName} <br>
+      <strong>מועד:</strong> ${t}
+    `;
+  </script>
+</body>
+</html>

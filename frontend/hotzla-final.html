@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>אישור הוצל"א - פרטים סופיים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="hotzla-final-title">
+      <div class="hero-inner">
+        <h1 id="hotzla-final-title">אישור הוצל"א - פרטים סופיים</h1>
+        <p class="lead">אנא מלאו את הפרטים הבאים לפני השליחה</p>
+
+        <form id="hotzlaForm">
+          <div class="form-group">
+            <label for="siv">סיווג</label>
+            <select id="siv" name="siv" class="input" required>
+              <option value="">בחר סיווג</option>
+              <option value="שמור">שמור</option>
+              <option value="סודי">סודי</option>
+              <option value="סודי ביותר">סודי ביותר</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="copies">מספר עותקים</label>
+            <input type="number" id="copies" name="copies" class="input" min="1" required>
+          </div>
+
+          <div class="form-group">
+            <label for="purpose">יעוד העותקים</label>
+            <textarea id="purpose" name="purpose" class="input" rows="3" required></textarea>
+          </div>
+
+          <button type="submit" class="cta" style="margin-bottom:10px;">שלח</button>
+          <br>
+          <a href="index.html" class="nav-link">חזור</a>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    document.getElementById('hotzlaForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      let details = {};
+      const existing = localStorage.getItem('bookingDetails');
+      if (existing) {
+        try { details = JSON.parse(existing); } catch (err) { details = {}; }
+      }
+
+      details.serviceType = 'אישור הוצל"א';
+      details.sivug = document.getElementById('siv').value;
+      details.copies = document.getElementById('copies').value;
+      details.purpose = document.getElementById('purpose').value;
+
+      localStorage.setItem('bookingDetails', JSON.stringify(details));
+      window.location.href = 'booking.html?serviceType=' + encodeURIComponent('אישור הוצל"א');
+    });
+  </script>
+</body>
+</html>

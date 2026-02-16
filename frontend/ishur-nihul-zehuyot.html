@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>אישור בניהול זהויות</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="ishur-title">
+      <div class="hero-inner" style="text-align:right;">
+        <h1 id="ishur-title">אישור בניהול זהויות</h1>
+
+        <div class="form-group">
+          <label for="network">באיזה רשת?</label>
+          <select class="input" id="network" name="network">
+            <option value="רשת סודי">רשת סודי</option>
+            <option value="רשת סודי ביותר">רשת סודי ביותר</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="personal">מספר אישי</label>
+          <input class="input" id="personal" name="personal"/>
+        </div>
+
+        <div class="form-group">
+          <label for="phoneInput">מספר טלפון</label>
+          <input class="input" id="phoneInput" name="phone" placeholder="הכנס מספר טלפון"/>
+        </div>
+
+        <button class="cta" id="send" style="margin-bottom:10px;">שלח</button>
+        <br>
+        <a href="index.html" class="nav-link">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const sendBtn = document.getElementById('send');
+
+      sendBtn.addEventListener('click', async () => {
+        const details = {
+          personal: document.getElementById('personal').value,
+          network: document.getElementById('network').value
+        };
+        const phone = document.getElementById('phoneInput').value;
+
+        try {
+          const res = await fetch('http://localhost:3000/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              serviceType: 'אישור בניהול זהויות',
+              details: details,
+              phone: phone
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert(`הפגישה נקבעה בהצלחה!\nתור: ${new Date(data.startTime).toLocaleString()}`);
+          } else {
+            alert(data.message || 'שגיאה בקביעת התור');
+          }
+        } catch (e) {
+          console.warn('booking error', e);
+          alert('שגיאת רשת');
+        }
+        location.href = 'index.html';
+      });
+    });
+  </script>
+</body>
+</html>

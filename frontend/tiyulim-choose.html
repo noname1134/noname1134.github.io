@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>טופס טיולים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="tiyulim-title">
+      <div class="hero-inner">
+        <h1 id="tiyulim-title">טופס טיולים</h1>
+        <p class="lead">בחר את סוג השירות</p>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+          <button class="cta" id="in"><i class="fa-solid fa-play"></i> נכנס (וידאו)</button>
+          <button class="cta" id="out"><i class="fa-solid fa-calendar-check"></i> יוצא - הזמנה</button>
+        </div>
+
+        <div style="margin-top:18px;">
+          <a href="index.html" class="nav-link">חזור</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    document.getElementById('in').onclick = () => {
+      location.href = 'tiyulim-video.html';
+    };
+
+    document.getElementById('out').onclick = () => {
+      // Save booking details so booking.html can use them
+      localStorage.setItem('bookingDetails', JSON.stringify({
+        serviceType: 'tiyulim-out'
+      }));
+      // Redirect to booking page
+      location.href = 'booking.html';
+    };
+  </script>
+</body>
+</html>

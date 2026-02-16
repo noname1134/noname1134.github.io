@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8">
+  <title>כניסת מנהל</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: var(--bg);
+      margin: 0;
+    }
+    .login-card {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+    .login-card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+    }
+    .login-card button {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .login-card button:hover {
+      background: #005f8f;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1><i class="fa-solid fa-user-shield"></i> כניסת מנהל</h1>
+    <input type="text" id="username" placeholder="שם משתמש">
+    <input type="password" id="password" placeholder="סיסמה">
+    <button onclick="login()">התחבר</button>
+    <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-right"></i> חזרה לדף הבית</a>
+  </div>
+
+  <script>
+    function login() {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      if (user === 'liad' && pass === '123456') {
+        window.location.href = 'admin.html';
+      } else {
+        alert('שם משתמש או סיסמה שגויים');
+      }
+    }
+  </script>
+</body>
+</html>

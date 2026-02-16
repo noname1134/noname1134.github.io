@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>טיולים נכנס - וידאו</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>טופס טיולים - נכנס</h1>
+        <p class="lead">צפה עד הסוף ואז לחץ על "המשך למבחן"</p>
+
+        <video controls id="v" style="max-width:100%;border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+          <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4"/>
+          הדפדפן שלך לא תומך בנגן וידאו.
+        </video>
+
+        <button class="cta" id="go" style="margin-top:14px;">המשך למבחן</button>
+        <a href="index.html" class="nav-link" style="margin-top:10px;">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    document.getElementById('go').onclick = () => {
+      const v = document.getElementById('v');
+      if (!v.ended) {
+        alert('אנא צפה בסרטון עד הסוף');
+        return;
+      }
+      location.href = 'tiyulim-quiz.html';
+    };
+  </script>
+</body>
+</html>

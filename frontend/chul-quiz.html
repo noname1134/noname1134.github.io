@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>מבחן חו"ל</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+  <style>
+    .choice {
+      display: block;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: right;
+    }
+    .choice:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .choice.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="quiz-title">
+      <div class="hero-inner">
+        <h1 id="quiz-title">מבחן - טופס חו"ל</h1>
+        <p class="lead">ענה על השאלות בהצלחה על מנת להמשיך להזמנה</p>
+        
+        <div id="q" style="width:100%;max-width:600px;text-align:right;"></div>
+        
+        <div style="margin-top:15px;">
+          <a href="chul-video.html" class="nav-link">חזור לצפייה</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    const qs = [
+      {
+        q: 'מה לעשות אם הסתבכת עם החוק?',
+        opts: ['לפנות לשגרירות הישראלית', 'לדבר עם השוטרים', 'להגיד שאתה חייל ישראל', 'לדרוש שישחררו אותך'],
+        correct: 0
+      },
+      {
+        q: 'מה מותר להביא לחו"ל?',
+        opts: ['חוגר', 'דיסקית', 'כובע', 'נעלי צבא'],
+        correct: 2
+      }
+    ];
+
+    let idx = 0;
+    let selectedIndex = null;
+
+    function show() {
+      const container = document.getElementById('q');
+      const cur = qs[idx];
+      selectedIndex = null;
+
+      container.innerHTML = `
+        <p><strong>${cur.q}</strong></p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+          ${cur.opts.map((o, i) => `
+            <div class="choice" data-index="${i}">${o}</div>
+          `).join('')}
+        </div>
+        <br/>
+        <button id="sub" class="cta" disabled style="opacity:0.6;">שלח</button>
+      `;
+
+      document.querySelectorAll('.choice').forEach(choice => {
+        choice.addEventListener('click', () => {
+          document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+          choice.classList.add('selected');
+          selectedIndex = Number(choice.dataset.index);
+          document.getElementById('sub').disabled = false;
+          document.getElementById('sub').style.opacity = '1';
+        });
+      });
+
+      document.getElementById('sub').onclick = () => {
+        if (selectedIndex === null) {
+          alert('בחר תשובה');
+          return;
+        }
+        if (selectedIndex === cur.correct) {
+          idx++;
+          if (idx >= qs.length) {
+            const details = { serviceType: 'chul' };
+            try {
+              localStorage.setItem('bookingDetails', JSON.stringify(details));
+            } catch (e) {
+              console.warn('localStorage error', e);
+            }
+            location.href = 'booking.html?serviceType=chul';
+          } else {
+            show();
+          }
+        } else {
+          alert('טעות — תחזור לצפייה בסרטון ונסה שנית');
+          location.href = 'chul-video.html';
+        }
+      };
+    }
+
+    show();
+  </script>
+</body>
+</html>

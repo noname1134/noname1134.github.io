@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>אישור הוצל"א</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="hotzla-title">
+      <div class="hero-inner">
+        <h1 id="hotzla-title">אישור הוצל"א</h1>
+        <p class="lead">אנא השיבו על כל השאלות לפני ההמשך</p>
+        
+        <div id="qs"></div>
+        
+        <button class="cta" id="check" style="margin-bottom:10px;">המשך</button>
+        <br>
+        <a href="index.html" class="nav-link">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    const questions = [
+      'שלחת את הקבצים לב"ם?',
+      'רשמת את סיווג החומר על המסמך?',
+      'הוספת את הערכת הב"ם למסמך?',
+      'הוספת למסמך עותק _  מתוך עותק_ ומספור לעמודים?'
+    ];
+
+    const qsdiv = document.getElementById('qs');
+    questions.forEach((q, i) => {
+      const d = document.createElement('div');
+      d.className = 'form-group';
+      d.innerHTML = `
+        <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;flex-direction:row;">
+          <label for="q${i}" style="margin:0;line-height:1.4;">${q}</label>
+          <span class="help-icon" onclick="showHelp(${i})">?</span>
+        </div>
+        <select id="q${i}" class="input">
+          <option value="" selected disabled>בחר תשובה</option>
+          <option value="yes">כן</option>
+          <option value="no">לא</option>
+        </select>
+      `;
+      qsdiv.appendChild(d);
+    });
+	
+	const helpImages = [
+	  'image/help_1.jpeg', // For question 0
+	  'image/help_2.jpeg', // For question 1
+	  'image/help_3.jpeg', // For question 2
+	  'image/help_4.jpeg'  // For question 3
+	];
+	
+    function showHelp(i) {
+      const overlay = document.createElement('div');
+      overlay.className = 'help-overlay';
+
+      const imgContainer = document.createElement('div');
+      imgContainer.className = 'help-img-container';
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'help-close';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.onclick = () => overlay.remove();
+
+      const img = document.createElement('img');
+      img.src = helpImages[i];
+      img.alt = '';
+
+      imgContainer.appendChild(closeBtn);
+      imgContainer.appendChild(img);
+      overlay.appendChild(imgContainer);
+      document.body.appendChild(overlay);
+    }
+
+    function showFailPopup() {
+      const overlay = document.createElement('div');
+      overlay.className = 'help-overlay';
+
+      const imgContainer = document.createElement('div');
+      imgContainer.className = 'help-img-container';
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'help-close';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.onclick = () => {
+        window.location.href = 'index.html';
+      };
+
+      const img = document.createElement('img');
+      img.src = 'image/help_fail.jpeg'
+      img.alt = '';
+
+      imgContainer.appendChild(closeBtn);
+      imgContainer.appendChild(img);
+      overlay.appendChild(imgContainer);
+      document.body.appendChild(overlay);
+    }
+
+    document.getElementById('check').onclick = () => {
+      const vals = [0, 1, 2, 3].map(i => document.getElementById('q' + i).value);
+
+      // If any answer is not "yes"
+      if (vals.some(v => v !== 'yes')) {
+        showFailPopup();
+        return;
+      }
+
+      // All answers are "yes"
+      try {
+        const precheckData = { serviceType: 'אישור הוצל"א' };
+        [0, 1, 2, 3].forEach(i => precheckData['q' + i] = document.getElementById('q' + i).value);
+        localStorage.setItem('bookingDetails', JSON.stringify(precheckData));
+      } catch (e) { console.warn('localStorage error', e); }
+      location.href = 'hotzla-final.html';
+    };
+  </script>
+</body>
+</html>

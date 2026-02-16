@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>אישור כניסה - קבלן/אזרח/שירות</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+  <style>
+    .person-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .person-card h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="ishur-title">
+      <div class="hero-inner" style="text-align:right;">
+        <h1 id="ishur-title">אישור כניסה</h1>
+        
+        <div class="form-group">
+          <label for="type">בחר סוג</label>
+          <select class="input" id="type">
+            <option value="kabaln">קבלן</option>
+            <option value="ezrah">אזרח</option>
+            <option value="service">קבלת שירות מהב"ם</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reason">מה הסיבה לאישור כניסה?</label>
+          <input class="input" id="reason"/>
+        </div>
+
+        <div class="form-group">
+          <label for="how">כמה אנשים?</label>
+          <input class="input" id="how" type="number" value="1" min="1"/>
+        </div>
+
+        <div id="dyn"></div>
+
+        <div class="form-group">
+          <label for="mainPhone">מספר טלפון ליצירת קשר</label>
+          <input class="input" id="mainPhone" placeholder="הכנס מספר טלפון"/>
+        </div>
+
+        <button class="cta" id="send" style="margin-bottom:10px;">שלח</button>
+        <br>
+        <a href="index.html" class="nav-link">חזור</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    function render() {
+      const typ = document.getElementById('type').value;
+      const n = Number(document.getElementById('how').value || 1);
+      const dyn = document.getElementById('dyn');
+      dyn.innerHTML = '';
+
+      for (let i = 0; i < n; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'person-card';
+        
+        if (typ === 'service') {
+          wrapper.innerHTML = `
+            <h4>אדם ${i+1}</h4>
+            <div class="form-group">
+              <label>מספר אישי</label>
+              <input class="personal input"/>
+            </div>
+            <div class="form-group">
+              <label>סוג</label>
+              <select class="ptype input">
+                <option>קבע</option>
+                <option>סדיר</option>
+                <option>מילואים</option>
+              </select>
+            </div>
+          `;
+        } else {
+          wrapper.innerHTML = `
+            <h4>אדם ${i+1}</h4>
+            <div class="form-group">
+              <label>שם מלא</label>
+              <input class="name input"/>
+            </div>
+            <div class="form-group">
+              <label>מספר טלפון</label>
+              <input class="phone input"/>
+            </div>
+            <div class="form-group">
+              <label>מספר תעודת זהות</label>
+              <input class="idnum input"/>
+            </div>
+            <div class="form-group">
+              <label>מספר אישי של מלווה בקבע</label>
+              <input class="personal input" type="number"/>
+            </div>
+          `;
+        }
+        dyn.appendChild(wrapper);
+      }
+    }
+
+    document.getElementById('type').onchange = render;
+    document.getElementById('how').oninput = render;
+    render();
+
+    document.getElementById('send').onclick = async () => {
+      const typ = document.getElementById('type').value;
+      const reason = document.getElementById('reason').value;
+      const mainPhone = document.getElementById('mainPhone').value;
+      const entries = [];
+
+      document.querySelectorAll('.person-card').forEach((card, i) => {
+        const obj = { index: i };
+        if (typ === 'service') {
+          obj.personal = card.querySelector('.personal').value;
+          obj.ptype = card.querySelector('.ptype').value;
+        } else {
+          obj.name = card.querySelector('.name').value;
+          obj.phone = card.querySelector('.phone').value;
+          obj.idnum = card.querySelector('.idnum').value;
+          obj.personal = card.querySelector('.personal').value;
+        }
+        entries.push(obj);
+      });
+
+      const payload = {
+        serviceType: "אישור כניסה קבלן/אזרח/לקבלת שירות מהב\"ם",
+        details: { reason, typ, entries },
+        phone: mainPhone
+      };
+
+      const res = await fetch('http://localhost:3000/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert(`הפגישה נקבעה!\nשעת התחלה: ${new Date(data.startTime).toLocaleString()}`);
+        window.location.href = 'index.html';
+      } else {
+        alert(data.message || 'שגיאה בקביעת התור');
+      }
+    };
+  </script>
+</body>
+</html>

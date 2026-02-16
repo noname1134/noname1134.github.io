@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>יומן פגישות — תצוגת יום</title>
+<link rel="stylesheet" href="modern.css"/>
+<style>
+  .day-wrap { max-width:1100px; margin: 16px auto; }
+  .nav-bar { display:flex; gap:10px; align-items:center; justify-content:center; margin-bottom:12px; }
+  .nav-bar button, .nav-bar input[type="date"] { padding:8px 10px; border-radius:8px; border:1px solid #e6eef7; background:#fff; cursor:pointer; }
+  .calendar-card { background:var(--card-bg); border-radius:14px; padding:18px; box-shadow:var(--shadow); }
+  .day-view { position:relative; height: calc((22 - 8.5) * 80px); overflow-y:auto; border-radius:10px; border:1px solid rgba(11,77,162,0.04); }
+  .time-grid { position:relative; height:100%; }
+  .time-label-col { position:absolute; left:0; top:0; width:72px; box-sizing:border-box; padding-top:4px; }
+  .time-content { position:absolute; left:72px; right:0; top:0; bottom:0; }
+  .hour-line { position:absolute; left:0; right:0; height:1px; border-top:1px dashed rgba(0,0,0,0.06); }
+  .hour-label { position:absolute; left:8px; transform:translateY(-50%); font-size:13px; color:var(--muted); background:transparent; padding:2px 4px; }
+  .event { position:absolute; box-sizing:border-box; padding:4px 6px; border-radius:8px; color:white; font-weight:600; white-space:normal; overflow-wrap:break-word; cursor:pointer; }
+  .event small { display:block; font-weight:500; opacity:0.9; margin-top:2px; font-size:12px; }
+  .now-line { position:absolute; left:72px; right:0; height:2px; background:crimson; z-index:40; box-shadow:0 0 6px rgba(255,0,0,0.15); }
+  @media (max-width:700px) {
+    .time-label-col { width:56px; }
+    .day-view { height: calc((22 - 8.5) * 64px); }
+  }
+</style>
+</head>
+<body>
+<header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+<div class="container">
+  <div class="day-wrap">
+    <div class="calendar-card">
+      <div class="nav-bar">
+        <button id="prevBtn">יום קודם</button>
+        <button id="todayBtn">היום</button>
+        <button id="nextBtn">יום הבא</button>
+        <input type="date" id="datePicker" />
+      </div>
+
+      <div id="status" style="text-align:center;color:var(--muted);margin-bottom:8px">טוען...</div>
+
+      <div class="day-view" id="dayView" aria-live="polite">
+        <div class="time-grid" id="timeGrid">
+          <div class="time-label-col" id="labelCol"></div>
+          <div class="time-content" id="contentCol"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./common.js"></script>
+<script>
+const START_MIN = 8 * 60 + 30;
+const END_MIN = 22 * 60;
+const TOTAL_MIN = END_MIN - START_MIN;
+const PIXELS_PER_HOUR = 180;
+const PIXELS_PER_MIN = PIXELS_PER_HOUR / 60;
+const LABEL_WIDTH = 72;
+
+const dayViewEl = document.getElementById('dayView');
+const timeGridEl = document.getElementById('timeGrid');
+const labelCol = document.getElementById('labelCol');
+const contentCol = document.getElementById('contentCol');
+const datePicker = document.getElementById('datePicker');
+const statusEl = document.getElementById('status');
+
+let selectedDate = new Date();
+
+const COLOR_MAP = {
+  "קידוד": "#1976d2",
+  "טופס חו\"ל": "#388e3c",
+  "אישור הוצל\"א": "#6a1b9a",
+  "השחרה": "#ff9800",
+  "אישור כניסה קבוע": "#00796b",
+  "אישור כניסה לקבלן/אזרח/לקבלת שירות מהב\"ם": "#512da8",
+  "אישור בניהול זהויות": "#e53935"
+};
+
+const NAME_MAP = {
+  "kidud": "קידוד",
+  "chul": "טופס חו\"ל",
+  "tiyulim-out": "טופס טיולים - יוצא",
+  "tiyulim-in": "טופס טיולים - נכנס",
+};
+
+function hashColor(s) {
+  let h = 0;
+  for (let i=0;i<s.length;i++) h = (h<<5) - h + s.charCodeAt(i);
+  const c = (h & 0x00FFFFFF).toString(16).toUpperCase();
+  return "#" + "00000".substring(0,6 - c.length) + c;
+}
+
+function buildGridVisual() {
+  labelCol.innerHTML = '';
+  contentCol.innerHTML = '';
+  const totalHeight = TOTAL_MIN * PIXELS_PER_MIN;
+  timeGridEl.style.height = totalHeight + 'px';
+  for (let m = START_MIN; m <= END_MIN; m += 30) {
+    const offset = (m - START_MIN) * PIXELS_PER_MIN;
+    const lbl = document.createElement('div');
+    lbl.className = 'hour-label';
+    lbl.style.top = offset + 'px';
+    const hh = Math.floor(m / 60);
+    const mm = m % 60;
+    lbl.textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+    labelCol.appendChild(lbl);
+    const line = document.createElement('div');
+    line.className = 'hour-line';
+    line.style.top = offset + 'px';
+    contentCol.appendChild(line);
+  }
+}
+
+async function loadAppointmentsForDate(dateObj) {
+  statusEl.textContent = 'טוען...';
+  clearEvents();
+  try {
+    const base = (typeof API !== 'undefined') ? API : 'http://localhost:3000';
+    const res = await fetch(base + '/book');
+    if (!res.ok) throw new Error('server returned ' + res.status);
+    const all = await res.json();
+    if (!Array.isArray(all)) throw new Error('invalid response from server');
+    const dayKey = dateObj.toISOString().slice(0,10);
+    const filtered = all.filter(a => a.startTime && a.startTime.slice(0,10) === dayKey);
+    filtered.sort((A,B) => new Date(A.startTime) - new Date(B.startTime));
+    statusEl.textContent = `נמצאו ${filtered.length} תורים ליום`;
+    renderEvents(filtered);
+    renderNowLine();
+    if (isToday(dateObj)) {
+      scrollToNow();
+    } else {
+      dayViewEl.scrollTop = 0;
+    }
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'שגיאה בטעינה — בדוק את השרת';
+  }
+}
+
+function clearEvents() {
+  contentCol.querySelectorAll('.event, .now-line').forEach(el => el.remove());
+}
+
+function renderEvents(events) {
+  if (!events || !events.length) return;
+  const evs = events.map(e => {
+    const s = new Date(e.startTime);
+    const en = new Date(e.endTime || e.startTime);
+    const startMin = s.getHours()*60 + s.getMinutes();
+    const endMin = en.getHours()*60 + en.getMinutes();
+    return {...e, startMin, endMin};
+  }).filter(e => e.endMin > START_MIN && e.startMin < END_MIN);
+
+  evs.forEach(e => {
+    e.renderStart = Math.max(e.startMin, START_MIN);
+    e.renderEnd = Math.min(e.endMin, END_MIN);
+  });
+
+  evs.sort((a,b) => a.renderStart - b.renderStart || a.renderEnd - b.renderEnd);
+  const clusters = [];
+  let current = [];
+  let currentEnd = -Infinity;
+  for (const e of evs) {
+    if (current.length === 0) {
+      current.push(e);
+      currentEnd = e.renderEnd;
+    } else {
+      if (e.renderStart < currentEnd) {
+        current.push(e);
+        if (e.renderEnd > currentEnd) currentEnd = e.renderEnd;
+      } else {
+        clusters.push(current);
+        current = [e];
+        currentEnd = e.renderEnd;
+      }
+    }
+  }
+  if (current.length) clusters.push(current);
+
+  for (const cluster of clusters) {
+	  const cols = [];
+	  for (const ev of cluster) {
+		let placed = false;
+		for (let c = 0; c < cols.length; c++) {
+		  const last = cols[c][cols[c].length - 1];
+		  if (last.renderEnd <= ev.renderStart) {
+			cols[c].push(ev);
+			ev._col = c;
+			placed = true;
+			break;
+		  }
+		}
+		if (!placed) {
+		  ev._col = cols.length;
+		  cols.push([ev]);
+		}
+	  }
+	  // Assign the total column count to all events in this cluster
+	  const colCount = cols.length;
+	  for (const ev of cluster) {
+		ev._colCount = colCount;
+	  }
+	}
+
+  for (const ev of evs) {
+    const topPx = (ev.renderStart - START_MIN) * PIXELS_PER_MIN;
+    const heightPx = Math.max(16, (ev.renderEnd - ev.renderStart) * PIXELS_PER_MIN);
+    const colCount = Math.max(1, ev._colCount || 1);
+    const colIndex = ev._col || 0;
+    const leftPerc = (colIndex / colCount) * 100;
+    const widthPerc = (1 / colCount) * 100;
+    const el = document.createElement('div');
+    el.className = 'event';
+    el.style.top = topPx + 'px';
+    el.style.height = heightPx + 'px';
+    el.style.left = leftPerc + '%';
+    el.style.width = widthPerc + '%';
+
+    const rawName = ev.serviceType || '';
+    const displayName = NAME_MAP[rawName] || rawName || 'שירות';
+    el.style.background = COLOR_MAP[displayName] || hashColor(displayName || (ev.id ? String(ev.id) : 'x'));
+
+    const timeLabel = `${formatHM(ev.startMin)} - ${formatHM(ev.endMin)}`;
+
+    let contentHTML;
+    if (heightPx < 24) {
+      contentHTML = `<div style="font-size:10px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${displayName} (${timeLabel})
+        </div>`;
+    } else {
+      contentHTML = `
+        <div style="font-weight:700; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          ${displayName} (${timeLabel})
+        </div>
+        <small style="display:block; font-size:10px; opacity:0.85;">${timeLabel}</small>`;
+    }
+
+    el.innerHTML = contentHTML;
+
+    el.addEventListener('click', () => {
+      const details = typeof ev.details === 'string' ? tryParseJSON(ev.details) : (ev.details || {});
+      alert(`שירות: ${displayName}\nשעה: ${timeLabel}\nטלפון: ${ev.phone || ''}\n\nפרטים:\n` + JSON.stringify(details, null, 2));
+    });
+    contentCol.appendChild(el);
+  }
+}
+
+function formatHM(totalMin) {
+  const hh = Math.floor(totalMin / 60);
+  const mm = totalMin % 60;
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+function tryParseJSON(s) { try { return JSON.parse(s || '{}'); } catch(e) { return s; } }
+function isToday(d) {
+  const t = new Date();
+  return t.toISOString().slice(0,10) === d.toISOString().slice(0,10);
+}
+
+function renderNowLine() {
+  contentCol.querySelectorAll('.now-line').forEach(n => n.remove());
+  const today = new Date();
+  if (!isToday(selectedDate)) return;
+  const nowMin = today.getHours()*60 + today.getMinutes();
+  if (nowMin < START_MIN || nowMin > END_MIN) return;
+  const y = (nowMin - START_MIN) * PIXELS_PER_MIN;
+  const nowLine = document.createElement('div');
+  nowLine.className = 'now-line';
+  nowLine.style.top = y + 'px';
+  contentCol.appendChild(nowLine);
+}
+
+function scrollToNow() {
+  const today = new Date();
+  if (!isToday(selectedDate)) return;
+  const nowMin = today.getHours()*60 + today.getMinutes();
+  if (nowMin < START_MIN || nowMin > END_MIN) return;
+  const y = (nowMin - START_MIN) * PIXELS_PER_MIN;
+  const container = dayViewEl;
+  const target = y - container.clientHeight / 2;
+  container.scrollTop = Math.max(0, target);
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  selectedDate.setDate(selectedDate.getDate() - 1);
+  datePicker.value = selectedDate.toISOString().slice(0,10);
+  loadAppointmentsForDate(selectedDate);
+});
+document.getElementById('nextBtn').addEventListener('click', () => {
+  selectedDate.setDate(selectedDate.getDate() + 1);
+  datePicker.value = selectedDate.toISOString().slice(0,10);
+  loadAppointmentsForDate(selectedDate);
+});
+document.getElementById('todayBtn').addEventListener('click', () => {
+  selectedDate = new Date();
+  datePicker.value = selectedDate.toISOString().slice(0,10);
+  loadAppointmentsForDate(selectedDate);
+});
+datePicker.addEventListener('change', () => {
+  const v = datePicker.value;
+  if (!v) return;
+  selectedDate = new Date(v + 'T00:00:00');
+  loadAppointmentsForDate(selectedDate);
+});
+
+(function init(){
+  const totalHeight = TOTAL_MIN * PIXELS_PER_MIN;
+  timeGridEl.style.height = totalHeight + 'px';
+  contentCol.style.height = totalHeight + 'px';
+  labelCol.style.height = totalHeight + 'px';
+  buildGridVisual();
+  datePicker.value = selectedDate.toISOString().slice(0,10);
+  loadAppointmentsForDate(selectedDate);
+  setInterval(() => {
+    renderNowLine();
+  }, 30_000);
+})();
+</script>
+</body>
+</html>

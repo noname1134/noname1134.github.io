@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8"/>
+  <title>טיולים נכנס - מבחן</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet"/>
+  <style>
+    .choice {
+      display: block;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: right;
+    }
+    .choice:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .choice.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav">
+      <a class="nav-link" href="index.html"><i class="fa-solid fa-house"></i> דף הבית</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>מבחן - טופס טיולים (נכנס)</h1>
+        <p class="lead">ענה על השאלות כדי להמשיך להזמנה</p>
+
+        <div id="q" style="max-width:600px;text-align:right;"></div>
+
+        <a href="tiyulim-video.html" class="nav-link" style="margin-top:15px;">חזור לצפייה</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    const qs = [
+      {
+        q: 'מה מותר לחבר למחשב?',
+        opts: ['מטען של טלפון','עכבר מהבית','דיסק און קיי','מקלדת מרכש צה"לי'],
+        correct: 3
+      },
+      {
+        q: 'מה עלי לעשות אם ראיתי עבירת ב"ם?',
+        opts: ['דווח למפקד שלי','לדווח לגורם ב"ם שלי','להעלים עין','לעשות אותו דבר'],
+        correct: 1
+      }
+    ];
+
+    let idx = 0;
+    let selectedIndex = null;
+
+    function show() {
+      const container = document.getElementById('q');
+      const cur = qs[idx];
+      selectedIndex = null;
+
+      container.innerHTML = `
+        <p><strong>${cur.q}</strong></p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+          ${cur.opts.map((o, i) => `
+            <div class="choice" data-index="${i}">${o}</div>
+          `).join('')}
+        </div>
+        <br/>
+        <button id="sub" class="cta" disabled style="opacity:0.6;">שלח</button>
+      `;
+
+      document.querySelectorAll('.choice').forEach(choice => {
+        choice.addEventListener('click', () => {
+          document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+          choice.classList.add('selected');
+          selectedIndex = Number(choice.dataset.index);
+          document.getElementById('sub').disabled = false;
+          document.getElementById('sub').style.opacity = '1';
+        });
+      });
+
+      document.getElementById('sub').onclick = () => {
+        if (selectedIndex === null) {
+          alert('בחר תשובה');
+          return;
+        }
+        if (selectedIndex === cur.correct) {
+          idx++;
+          if (idx >= qs.length) {
+            const details = { serviceType: 'tiyulim-in' };
+            try {
+              localStorage.setItem('bookingDetails', JSON.stringify(details));
+            } catch (e) {
+              console.warn('localStorage error', e);
+            }
+            location.href = 'booking.html?serviceType=tiyulim-in';
+          } else {
+            show();
+          }
+        } else {
+          alert('טעות — תחזור לצפייה בסרטון ונסה שנית');
+          location.href = 'tiyulim-video.html';
+        }
+      };
+    }
+
+    show();
+  </script>
+</body>
+</html>

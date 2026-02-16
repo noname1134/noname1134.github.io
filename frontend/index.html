@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8" />
+  <title>מרכז שירותים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="modern.css" rel="stylesheet" />
+</head>
+<body>
+  <header class="header" role="banner">
+    <div class="logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span class="site-title">מרכז שירותים</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="תפריט ראשי">
+    </nav>
+	<div class="admin-login-container">
+	  <a href="login.html" class="admin-login-btn">
+		<i class="fa-solid fa-user-shield"></i> כניסת מנהל
+	  </a>
+	</div>
+  </header>
+
+  <main class="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <h1 id="hero-title">ברוכים הבאים</h1>
+        <p class="lead">בחרו את השירות המבוקש כדי להמשיך בתהליך ההזמנה</p>
+      </div>
+    </section>
+
+    <section class="services-section" aria-labelledby="services-title">
+      <h2 id="services-title" class="section-title">שירותים זמינים</h2>
+      <div class="services" id="servicesGrid" role="list">
+        <!-- Cards populated by script -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div>© 2025 כל הזכויות שמורות</div>
+  </footer>
+
+  <script>
+    // Keep IDs matching actual HTML files in the frontend folder.
+    const services = [
+      {id:'kidud', label:'קידוד', icon:'fa-solid fa-lock', desc:'הזמנת פגישת קידוד'},
+      {id:'chul-video', label:'טופס חו\"ל', icon:'fa-solid fa-plane', desc:'צפה בסרטון ועבור מבחן'},
+      {id:'tiyulim-choose', label:'טופס טיולים', icon:'fa-solid fa-map', desc:'כניסה/יציאה - בחירת טיול'},
+      {id:'ishur-knisa-kavua', label:'אישור כניסה קבוע', icon:'fa-solid fa-id-card', desc:'הזמנה מראש - כניסה קבועה'},
+      {id:'ishur-knisa-other', label:'אישור כניסה חד פעמי', icon:'fa-solid fa-door-open', desc:'כניסה חד פעמית'},
+      {id:'ishur-nihul-zehuyot', label:'אישור ניהול זהויות', icon:'fa-solid fa-user-shield', desc:'ניהול זהויות'},
+      // Added missing options
+      {id:'ishur-hotzla', label:'אישור הוצל\"א', icon:'fa-solid fa-file-signature', desc:'הגשת בקשה להוצל\"א'},
+      {id:'hashkhara', label:'השחרה', icon:'fa-solid fa-user-slash', desc:'טיפול בהשחרה ובסטטוס כניסה'}
+    ];
+
+    const grid = document.getElementById('servicesGrid');
+    services.forEach(service => {
+      const card = document.createElement('button');
+      card.setAttribute('type','button');
+      card.className = 'service-card';
+      card.setAttribute('role','listitem');
+      card.innerHTML = `
+        <div class="service-icon"><i class="${service.icon}" aria-hidden="true"></i></div>
+        <div class="service-body">
+          <h3 class="service-title">${service.label}</h3>
+          <p class="service-desc">${service.desc}</p>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        // Navigate to the page with matching id (assumes file exists: <id>.html)
+        window.location.href = `${service.id}.html`;
+      });
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>
