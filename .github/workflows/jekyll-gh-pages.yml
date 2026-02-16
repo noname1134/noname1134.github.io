@@ -1,0 +1,29 @@
+name: Run Appointment Website
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Start server
+        working-directory: ./backend
+        run: |
+          node server.js &
+          sleep 10
+          curl http://localhost:3000 || true
